@@ -1,0 +1,1 @@
+Exercise 4: Implementing the Adapter Pattern
