@@ -1,0 +1,133 @@
+
+Scenario 1: ProcessMonthlyInterest Procedure
+
+CREATE OR REPLACE PROCEDURE ProcessMonthlyInterest IS
+    v_interest_rate CONSTANT NUMBER := 0.01; -- 1% interest rate
+BEGIN
+    -- Update balances for all savings accounts
+    BEGIN
+        UPDATE Accounts
+        SET Balance = Balance * (1 + v_interest_rate)
+        WHERE AccountType = 'Savings';
+        
+        -- Commit the transaction
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- Rollback transaction on error
+            ROLLBACK;
+            -- Log error
+            DBMS_OUTPUT.PUT_LINE('Error processing monthly interest: ' || SQLERRM);
+            -- Re-raise the error
+            RAISE;
+    END;
+END;
+/
+
+
+
+Here are the stored procedures for each scenario:
+
+Scenario 1: ProcessMonthlyInterest Procedure
+This procedure calculates and updates the balance of all savings accounts by applying an interest rate of 1%.
+
+plsql
+Copy code
+CREATE OR REPLACE PROCEDURE ProcessMonthlyInterest IS
+    v_interest_rate CONSTANT NUMBER := 0.01; -- 1% interest rate
+BEGIN
+    -- Update balances for all savings accounts
+    BEGIN
+        UPDATE Accounts
+        SET Balance = Balance * (1 + v_interest_rate)
+        WHERE AccountType = 'Savings';
+        
+        -- Commit the transaction
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- Rollback transaction on error
+            ROLLBACK;
+            -- Log error
+            DBMS_OUTPUT.PUT_LINE('Error processing monthly interest: ' || SQLERRM);
+            -- Re-raise the error
+            RAISE;
+    END;
+END;
+/
+Scenario 2: UpdateEmployeeBonus Procedure
+
+CREATE OR REPLACE PROCEDURE UpdateEmployeeBonus(
+    p_department IN VARCHAR2,
+    p_bonus_percentage IN NUMBER
+) IS
+BEGIN
+    -- Update employee salaries with the bonus
+    BEGIN
+        UPDATE Employees
+        SET Salary = Salary + (Salary * p_bonus_percentage / 100)
+        WHERE Department = p_department;
+        
+        -- Commit the transaction
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- Rollback transaction on error
+            ROLLBACK;
+            -- Log error
+            DBMS_OUTPUT.PUT_LINE('Error updating employee bonuses: ' || SQLERRM);
+            -- Re-raise the error
+            RAISE;
+    END;
+END;
+/
+
+
+Scenario 3: TransferFunds Procedure
+
+CREATE OR REPLACE PROCEDURE TransferFunds(
+    p_from_account_id IN NUMBER,
+    p_to_account_id IN NUMBER,
+    p_amount IN NUMBER
+) IS
+    v_from_balance NUMBER;
+    v_to_balance NUMBER;
+BEGIN
+    -- Fetch current balances
+    SELECT Balance INTO v_from_balance
+    FROM Accounts
+    WHERE AccountID = p_from_account_id;
+    
+    SELECT Balance INTO v_to_balance
+    FROM Accounts
+    WHERE AccountID = p_to_account_id;
+
+    -- Check if there is enough balance in the source account
+    IF v_from_balance < p_amount THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Insufficient funds in account ' || p_from_account_id);
+    END IF;
+
+    -- Begin transaction
+    BEGIN
+        -- Perform the fund transfer
+        UPDATE Accounts
+        SET Balance = Balance - p_amount
+        WHERE AccountID = p_from_account_id;
+        
+        UPDATE Accounts
+        SET Balance = Balance + p_amount
+        WHERE AccountID = p_to_account_id;
+        
+        -- Commit the transaction
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- Rollback transaction on error
+            ROLLBACK;
+            -- Log error
+            DBMS_OUTPUT.PUT_LINE('Error transferring funds: ' || SQLERRM);
+            -- Re-raise the error
+            RAISE;
+    END;
+END;
+/

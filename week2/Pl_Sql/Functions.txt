@@ -1,0 +1,44 @@
+Scenario 1: CalculateAge Function
+
+
+CREATE OR REPLACE FUNCTION CalculateAge(
+    p_dob DATE
+) RETURN NUMBER IS
+    v_age NUMBER;
+BEGIN
+    -- Calculate age in years
+    v_age := FLOOR(MONTHS_BETWEEN(SYSDATE, p_dob) / 12);
+    RETURN v_age;
+END;
+/
+
+
+Scenario 2: CalculateMonthlyInstallment Function
+Installment = [P.r.(1+r)^n]/([(1+r)^n] -1)
+P=loan amt , r =rate,n=no of MONTHS
+
+CREATE OR REPLACE FUNCTION CalculateMonthlyInstallment(
+    p_loan_amount NUMBER,
+    p_annual_interest_rate NUMBER,
+    p_loan_duration_years NUMBER
+) RETURN NUMBER IS
+    v_monthly_interest_rate NUMBER;
+    v_number_of_payments NUMBER;
+    v_monthly_installment NUMBER;
+BEGIN
+    -- Convert annual interest rate to monthly and calculate number of payments
+    v_monthly_interest_rate := p_annual_interest_rate / 12 / 100;
+    v_number_of_payments := p_loan_duration_years * 12;
+
+    -- Calculate monthly installment
+    IF v_monthly_interest_rate > 0 THEN
+        v_monthly_installment := (p_loan_amount * v_monthly_interest_rate * POWER(1 + v_monthly_interest_rate, v_number_of_payments)) /
+                                 (POWER(1 + v_monthly_interest_rate, v_number_of_payments) - 1);
+    ELSE
+        v_monthly_installment := p_loan_amount / v_number_of_payments;
+    END IF;
+
+    RETURN v_monthly_installment;
+END;
+/
+

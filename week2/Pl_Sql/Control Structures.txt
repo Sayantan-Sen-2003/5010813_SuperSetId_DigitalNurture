@@ -1,0 +1,64 @@
+Scenario 1: Applying a Discount to Loan Interest Rates for Customers Above 60 Years Old
+
+DECLARE
+    CURSOR customer_cursor IS
+        SELECT CustomerID, DOB, InterestRate
+        FROM Customers c
+        JOIN Loans l ON c.CustomerID = l.CustomerID;
+    v_age NUMBER;
+BEGIN
+    FOR rec IN customer_cursor LOOP
+        v_age := FLOOR(MONTHS_BETWEEN(SYSDATE, rec.DOB) / 12);
+        
+        IF v_age > 60 THEN
+            UPDATE Loans
+            SET InterestRate = InterestRate - 1
+            WHERE CustomerID = rec.CustomerID
+              AND InterestRate > 1;  -- Ensures interest rate doesn't go below 1%
+        END IF;
+    END LOOP;
+    COMMIT;
+END;
+/
+
+
+Scenario 2: Setting VIP Status Based on Balance
+ALTER TABLE Customers ADD (IsVIP CHAR(1));
+
+DECLARE
+    CURSOR customer_cursor IS
+        SELECT CustomerID, Balance
+        FROM Customers;
+BEGIN
+    FOR rec IN customer_cursor LOOP
+        IF rec.Balance > 10000 THEN
+            UPDATE Customers
+            SET IsVIP = 'Y'
+            WHERE CustomerID = rec.CustomerID;
+        ELSE
+            UPDATE Customers
+            SET IsVIP = 'N'
+            WHERE CustomerID = rec.CustomerID;
+        END IF;
+    END LOOP;
+    COMMIT;
+END;
+/
+
+
+Scenario 3: Sending Reminders for Loans Due in the Next 30 Days
+
+DECLARE
+    CURSOR loan_cursor IS
+        SELECT l.CustomerID, c.Name, l.LoanID, l.EndDate
+        FROM Loans l
+        JOIN Customers c ON l.CustomerID = c.CustomerID
+        WHERE l.EndDate BETWEEN SYSDATE AND SYSDATE + 30;
+BEGIN
+    FOR rec IN loan_cursor LOOP
+        DBMS_OUTPUT.PUT_LINE('Reminder: Loan ID ' || rec.LoanID || ' for customer ' || rec.Name || ' is due on ' || rec.EndDate);
+    END LOOP;
+END;
+/
+
+
